@@ -50,14 +50,93 @@ def puntofijo():
     return()
 
 
-def biseccion():
+'''Método de Bisección'''
+
+def error(fant,fpost):
     
-    return()
+    e=(abs(fpost-fant))
+    
+    return(e)
+
+'''Método de Bisección: 
+Recibe intervalo en el que se debe buscar la raíz y tolerancia.
+Realiza las iteraciones que sean necesarias hasta hallar la raiz o hasta que el error sea menor a la tolerancia.
+Devuelve la x que cumple con f(x)=0 o que tiene un error parecido a la tolerancia dada.'''
 
 
-def nr():
+def xbis(a,b): #Se obtiene la x que será utilizada por el método de bisección 
+    return((a+b)/2)
+                      
+def biseccion(a, b, t): #Calcula la solución
+    iteraciones=[]
+    iteracion=[]
     
-    return()
+    x=xbis(a,b)
+    y=f2(x)
+    i=0 #Número de iteración
+    e=1 #Sé que, por lo general, la tolerancia es menor a 1. Así que lo inicializo con ese valor.
+    iteracion=[i, x]
+    iteraciones.append(iteracion)
+    
+    while (y!=0) and (e>t):
+        iteracion=[]
+        if f2(x)*f2(a)>0: #Verifico si tienen mismo signo
+            
+            fant=f2(x)
+            a=x #Intervalo ahora es desde x hasta b
+            x=xbis(a,b)
+            y=f2(x)
+            i=i+1
+            e=error(fant,y)
+            
+            iteracion=[i, x]
+            iteraciones.append(iteracion)
+            
+            print(i,x, e)
+            
+        elif f2(x)*f2(b)>0:
+            
+            fant=f2(x)
+            b=x #Intervalo ahora es desde a hasta x     
+            x=xbis(a,b)
+            y=f2(x)
+            i=i+1
+            e=error(fant,y)
+            
+            iteracion=[i, x]
+            iteraciones.append(iteracion)
+            
+            print(i,x, e)
+    print ()
+    print('MÉTODO DE BISECCIÓN')        
+    print('La altura del tanque que logra modelar el volumen máximo es',x, 'y se obtiene luego de', i,'iteraciones.')
+    return(x, iteraciones)
+
+
+'''Método de Newton-Raphson'''
+""" Realiza el calculo del metodo N-R"""
+def calcular(f,df,panterior):
+
+    pactual = panterior - (f(panterior)/df(panterior))
+    return pactual
+
+""" Metodo Newton-Raphson: se reciben parametros y se realiza el metodo hasta que se obtenga un error menor a la tolerancia"""
+def newton(f,df, po,tolerancia):
+  
+    panterior = po
+    error = tolerancia+1
+    iteraciones = 1
+    
+    while error > tolerancia: 
+        
+        pactual = calcular(f,df, panterior)
+        error = abs(pactual - panterior)
+        panterior = pactual
+       # print("actual", pactual, "anterior", panterior)
+        iteraciones+=1
+        print(error)
+    print("Solucion aproximada: {:.10}".format(pactual))
+    print("numero de iteraciones: {:d}".format(iteraciones))
 
 
 def nrm():
@@ -99,7 +178,11 @@ plt.show()
 plt.savefig('Funciones y sus derivadas.svg') #Para agregarlo al informe hay que convertir el archivo de .svg a .emf
 
 
+#%% Cálculo de la solución
 
+p=xbis(a,b)
+t1=10**(-5)
+newton(f1, f1x, p, t1 )
 
 
 
