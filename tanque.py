@@ -44,19 +44,6 @@ def fx1(x):
     
     return(fx2(x)*porcentaje_pedido)
 
-"Define el volumen del tanque de máxima capacidad, lleno al porcentaje pedido."
-def vmax():
-    v=porcentaje_pedido*(4/3)*pi*(R**3)
-    return(v)
-
-
-"Define la funcion para buscar la altura tal que, al llenar completamente el tanque, éste contenga el volumen pedido."
-def v(x):
-    return(f2(x)-vmax())
-
-def dv(x):
-    return(fx2(x))
-
 
 #%% Definición de funciones a utilizar 
 
@@ -65,25 +52,18 @@ def puntofijo():
     return()
 
 
-'''Método de Bisección'''
-def error(fant,fpost):
-    
-    e=(abs(fpost-fant))
-    
-    return(e)
 
-'''Método de Bisección: 
-Recibe intervalo en el que se debe buscar la raíz y tolerancia.
+'''Método de Bisección''' 
+'''Recibe intervalo en el que se debe buscar la raíz y tolerancia.
 Realiza las iteraciones que sean necesarias hasta hallar la raiz o hasta que el error sea menor a la tolerancia.
 Devuelve la x que cumple con f(x)=0 o que tiene un error parecido a la tolerancia dada.'''
-
 
 def xbis(a,b): #Se obtiene la x que será utilizada por el método de bisección 
     return((a+b)/2)
                       
-def biseccion(a, b, t): #Calcula la solución
+def biseccion(f, a, b, t): #Calcula la solución
 
-    if v(a)*v(b)>=0:
+    if f(a)*f(b)>=0:
         print('Error')
         return('Error','Error')
     else:
@@ -91,45 +71,51 @@ def biseccion(a, b, t): #Calcula la solución
         iteracion=[]
         
         x=xbis(a,b)
-        y=v(x)
+        y=f(x)
         i=0 #Número de iteración
-        e=1 #Sé que, por lo general, la tolerancia es menor a 1. Así que lo inicializo con ese valor.
+        e=1+t
         iteracion=[i, x]
         iteraciones.append(iteracion)
         
         while (y!=0) and (e>t):
             iteracion=[]
-            if v(x)*v(a)>0: #Verifico si tienen mismo signo
+            if f(x)*f(a)>0: #Verifico si tienen mismo signo
                 
                 fant=v(x)
                 a=x #Intervalo ahora es desde x hasta b
                 x=xbis(a,b)
-                y=v(x)
+                y=f(x)
                 i=i+1
-                e=error(fant,y)
+                e=abs(y-fant)
                 
                 iteracion=[i, x]
                 iteraciones.append(iteracion)
                 
                 print(i,x, e)
                 
-            elif v(x)*v(b)>0:
+            elif f(x)*f(b)>0:
                 
-                fant=v(x)
+                fant=f(x)
                 b=x #Intervalo ahora es desde a hasta x     
                 x=xbis(a,b)
-                y=v(x)
+                y=f(x)
                 i=i+1
-                e=error(fant,y)
+                e=abs(y-fant)
                 
                 iteracion=[i, x]
                 iteraciones.append(iteracion)
                 
                 print(i,x, e)
+        
+        #print('MÉTODO DE BISECCIÓN')        
+        #print('La altura del tanque que logra contener el volumen requerido al 100% es',x, 'y se obtiene luego de', i,'iteraciones.')
+        
+        print("Solucion aproximada (Bisección): {:.10}".format(x))
+        print("numero de iteraciones: {:d}".format(i))
         print ()
-        print('MÉTODO DE BISECCIÓN')        
-        print('La altura del tanque que logra contener el volumen requerido al 100% es',x, 'y se obtiene luego de', i,'iteraciones.')
-        return(x, iteraciones)
+        
+        return(x, i, iteraciones)
+
 
 
 '''Método de Newton-Raphson''' #Belu
@@ -141,33 +127,6 @@ def calcular(f,df,panterior):
 
 """ Metodo Newton-Raphson: se reciben parametros y se realiza el metodo hasta que se obtenga un error menor a la tolerancia"""
 def newton(f,df, po,tolerancia):
-  
-    panterior = po
-    error = tolerancia+1
-    iteraciones = 1
-    
-    while error > tolerancia: 
-        
-        pactual = calcular(f,df, panterior)
-        error = abs(pactual - panterior)
-        panterior = pactual
-       # print("actual", pactual, "anterior", panterior)
-        iteraciones+=1
-        print(error)
-    print("Solucion aproximada: {:.10}".format(pactual))
-    print("numero de iteraciones: {:d}".format(iteraciones))
-
-
-
-'''Método de Newton-Raphson'''#Belu modificado (sin definir f con lambda)
-""" Realiza el calculo del metodo N-R"""
-def calcularnr(panterior):
-
-    pactual = panterior - (v(panterior)/dv(panterior))
-    return pactual
-
-""" Metodo Newton-Raphson: se reciben parametros y se realiza el metodo hasta que se obtenga un error menor a la tolerancia"""
-def nr(po,tolerancia):
     iteraciones=[]
   
     panterior = po
@@ -178,7 +137,7 @@ def nr(po,tolerancia):
     
     while error > tolerancia: 
         
-        pactual = calcularnr(panterior)
+        pactual = calcular(f,df, panterior)
         error = abs(pactual - panterior)
         panterior = pactual
         iteracion=[i, pactual]
@@ -188,17 +147,43 @@ def nr(po,tolerancia):
         print(error)
     print("Solucion aproximada: {:.10}".format(pactual))
     print("numero de iteraciones: {:d}".format(i))
+    print ()
     
-    return(pactual,iteraciones)
+    return(pactual, i, iteraciones)
+
+
     
 def nrm():
     
     return()
 
 
-def secante():
+""" Pre: los parametros recibidos son válidos. En el caso del intervalo, se asume que cumple que el producto del intervalo evaluado en la funcion
+    es menor a cero (f(a)*f(b) < 0; garantizando existencia de raíz por el teorema de Bolzano"""
+def secante(f, pn_1, pn_2, tolerancia): 
+    error = tolerancia + 1
+    i = -1 
+    iteraciones=[]
     
-    return()
+    while error > tolerancia: 
+        
+        pn = pn_1 - ( ((pn_1-pn_2)/(f(pn_1)-f(pn_2)))*f(pn_1) )
+        
+        error = abs(pn - pn_1)
+        #WARNING: ojo que si ya se cumplió el error, entonces se estarian actualizando igual los p
+        if error>tolerancia:
+            pn_2 = pn_1
+            pn_1 = pn
+        i+= 1
+        iteracion=[i, pn]
+        iteraciones.append(iteracion)
+        
+        print(pn)
+        
+    print("Solucion aproximada (Secante): {:.10}".format(pn))
+    print("numero de iteraciones: {:d}".format(i))
+    
+    return(pn, i, iteraciones)
 
 
 #%% Gráfico de las funciones y sus derivadas
@@ -232,16 +217,26 @@ plt.savefig('Funciones y sus derivadas.svg') #Para agregarlo al informe hay que 
 
 #%% Cálculo de la solución
 
-p=xbis(a,b)
-t1=10**(-5)
-#newton(f1, fx1, p, t1 )
+p=xbis(a,b) #Semilla 
 
-#Primero, busco cuánto vale el volumen maximo/cuál es el volumen del tanque más grande cuando lo lleno al porcentaje que nos piden
+
+#Primero, busco cuánto vale el volumen maximo/cuál es el volumen del tanque más grande cuando lo llenamos al porcentaje que nos piden
+#Por lo tanto, debemos buscar las raíces de la función que modela al tanque
 #Haciendo un analisis cualitativo antes de ingresar datos, notamos que el valor máximo se obtiene cuando la altura es 2R.
-#Por lo tanto, debemos buscar las raíces de la función v(x)
+
 b=2*R
-raiz_biseccion, iteraciones_biseccion=biseccion(a,b,tol)
-raiz_nr, iteraciones_nr=nr(p,t1)
+
+"Define el volumen del tanque de máxima capacidad, lleno al porcentaje pedido."
+vmax=lambda x: porcentaje_pedido*(4/3)*pi*(R**3)
+
+
+"Define la funcion para buscar la altura tal que, al llenar completamente el tanque, éste contenga el volumen pedido."
+v=lambda x:f2(x)-vmax(x)
+dv=lambda x:fx2(x)
+
+raiz_biseccion, cant_it_biseccion, iteraciones_biseccion = biseccion(v,a,b,tol)
+raiz_nr, cant_it_newton, iteraciones_nr = newton(v,dv,p,tol)
+raiz_secante, cant_it_secante, iteraciones_secante = secante(v,a,b,tol)
 
 
 #%%Grafico de la función
